@@ -6,8 +6,8 @@ import torch
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 
-model = BertForSequenceClassification.from_pretrained('yiyanghkust/finbert-pretrain',num_labels=3)
-tokenizer = BertTokenizer.from_pretrained('yiyanghkust/finbert-pretrain')
+model = BertForSequenceClassification.from_pretrained('bert-base-uncased',num_labels=3)
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 
 def prepare_dataset(df_train, df_val, df_test):
@@ -18,19 +18,21 @@ def prepare_dataset(df_train, df_val, df_test):
     dataset_train = dataset_train.map(lambda e: tokenizer(e['sentence'], truncation=True, padding='max_length', max_length=512), batched=True)
     dataset_val = dataset_val.map(lambda e: tokenizer(e['sentence'], truncation=True, padding='max_length', max_length=512), batched=True)
     dataset_test = dataset_test.map(lambda e: tokenizer(e['sentence'], truncation=True, padding='max_length' , max_length=512), batched=True)
-
+    print(dataset_train.shape)
     dataset_train.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask', 'label'])
+    
     dataset_val.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask', 'label'])
     dataset_test.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask', 'label'])
+    
 
     return dataset_train, dataset_val, dataset_test
 
 def compute_metrics(eval_pred):
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    classification_report = classification_report(labels, predictions, output_dict=True))
+    classification_scores = classification_report(labels, predictions, output_dict=True)
     return {'accuracy' : accuracy_score(predictions, labels),
-            'classification_score': classification_report}
+            'classification_scores': classification_scores}
 
 
 if __name__ == "__main__":
